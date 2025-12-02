@@ -17,11 +17,11 @@ DVC objects
 .. |License| image:: https://img.shields.io/pypi/l/dvc-objects
    :target: https://opensource.org/licenses/Apache-2.0
    :alt: License
-.. |Tests| image:: https://github.com/iterative/dvc-objects/workflows/Tests/badge.svg
-   :target: https://github.com/iterative/dvc-objects/actions?workflow=Tests
+.. |Tests| image:: https://github.com/treeverse/dvc-objects/workflows/Tests/badge.svg
+   :target: https://github.com/treeverse/dvc-objects/actions?workflow=Tests
    :alt: Tests
-.. |Codecov| image:: https://codecov.io/gh/iterative/dvc-objects/branch/main/graph/badge.svg
-   :target: https://app.codecov.io/gh/iterative/dvc-objects
+.. |Codecov| image:: https://codecov.io/gh/treeverse/dvc-objects/branch/main/graph/badge.svg
+   :target: https://app.codecov.io/gh/treeverse/dvc-objects
    :alt: Codecov
 .. |pre-commit| image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
    :target: https://github.com/pre-commit/pre-commit
@@ -89,9 +89,9 @@ please `file an issue`_ along with a detailed description.
 
 .. _Apache 2.0 license: https://opensource.org/licenses/Apache-2.0
 .. _PyPI: https://pypi.org/
-.. _file an issue: https://github.com/iterative/dvc-objects/issues
+.. _file an issue: https://github.com/treeverse/dvc-objects/issues
 .. _pip: https://pip.pypa.io/
 .. github-only
 .. _Contributor Guide: CONTRIBUTING.rst
-.. _dvc: https://github.com/iterative/dvc
-.. _dvc-data: https://github.com/iterative/dvc-data
+.. _dvc: https://github.com/treeverse/dvc
+.. _dvc-data: https://github.com/treeverse/dvc-data
