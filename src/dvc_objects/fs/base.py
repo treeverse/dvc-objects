@@ -573,6 +573,7 @@ class FileSystem:
         path: AnyFSPath,
         callback: fsspec.Callback = ...,
         batch_size: Optional[int] = ...,
+        return_exceptions: Literal[False] = ...,
         **kwargs,
     ) -> "Entry": ...
 
@@ -582,12 +583,44 @@ class FileSystem:
         path: list[AnyFSPath],
         callback: fsspec.Callback = ...,
         batch_size: Optional[int] = ...,
+        return_exceptions: Literal[False] = ...,
     ) -> list["Entry"]: ...
 
-    def info(self, path, callback=DEFAULT_CALLBACK, batch_size=None, **kwargs):
+    @overload
+    def info(
+        self,
+        path: AnyFSPath,
+        callback: fsspec.Callback = ...,
+        batch_size: Optional[int] = ...,
+        return_exceptions: Literal[True] = ...,
+        **kwargs,
+    ) -> Union["Entry", Exception]: ...
+
+    @overload
+    def info(
+        self,
+        path: list[AnyFSPath],
+        callback: fsspec.Callback = ...,
+        batch_size: Optional[int] = ...,
+        return_exceptions: Literal[True] = ...,
+    ) -> list[Union["Entry", Exception]]: ...
+
+    def info(
+        self,
+        path,
+        callback: fsspec.Callback = DEFAULT_CALLBACK,
+        batch_size=None,
+        return_exceptions=False,
+        **kwargs,
+    ):
         if isinstance(path, str):
-            return self.fs.info(path, **kwargs)
-        callback.set_size(len(path))
+            try:
+                return self.fs.info(path, **kwargs)
+            except Exception as e:
+                if return_exceptions:
+                    return e
+                raise
+
         jobs = batch_size or self.jobs
         if self.fs.async_impl:
             loop = get_loop()
@@ -596,14 +629,22 @@ class FileSystem:
                     [self.fs._info(p, **kwargs) for p in path],
                     batch_size=jobs,
                     callback=callback,
+                    return_exceptions=return_exceptions,
                 ),
                 loop,
             )
             return fut.result()
 
-        func = partial(self.fs.info, **kwargs)
+        def info_func(p):
+            try:
+                return self.fs.info(p, **kwargs)
+            except Exception as e:
+                if return_exceptions:
+                    return e
+                raise
+
         with ThreadPoolExecutor(max_workers=jobs, cancel_on_error=True) as executor:
-            it = executor.map(func, path)
+            it = executor.map(info_func, path)
             return list(callback.wrap(it))
 
     def mkdir(
