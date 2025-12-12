@@ -133,3 +133,30 @@ def test_normpath_with_newlines():
     fs = LocalFileSystem()
     newline_path = os.path.join("one", "two\nthree")
     assert fs.normpath(newline_path) == newline_path
+
+
+def test_info_return_exceptions(tmp_path):
+    fs = LocalFileSystem()
+    path = fspath(tmp_path / "non-existent")
+
+    with pytest.raises(FileNotFoundError):
+        fs.info(path)
+
+    result = fs.info(path, return_exceptions=True)
+    assert isinstance(result, FileNotFoundError)
+
+
+def test_info_return_exceptions_batch(tmp_path):
+    fs = LocalFileSystem()
+    exist_path = fspath(tmp_path / "existent")
+    non_exist_path = fspath(tmp_path / "non-existent")
+    (tmp_path / "existent").write_text("foo")
+
+    # default behavior: raises on first error
+    with pytest.raises(FileNotFoundError):
+        fs.info([exist_path, non_exist_path])
+
+    results = fs.info([exist_path, non_exist_path], return_exceptions=True)
+    assert isinstance(results[0], dict)
+    assert fs.normpath(results[0]["name"]) == exist_path
+    assert isinstance(results[1], FileNotFoundError)
