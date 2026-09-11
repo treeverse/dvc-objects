@@ -88,8 +88,12 @@ class FsspecLocalFileSystem(fsspec.AbstractFileSystem):
         parent = self._parent(rpath)
         makedirs(parent, exist_ok=True)
         tmp_file = os.path.join(parent, tmp_fname())
-        copyfile(lpath, tmp_file, callback=callback)
-        os.replace(tmp_file, rpath)
+        try:
+            copyfile(lpath, tmp_file, callback=callback)
+            os.replace(tmp_file, rpath)
+        except BaseException:
+            self.rm_file(tmp_file)
+            raise
 
     def get_file(self, rpath, lpath, callback=None, **kwargs):
         if self.isdir(rpath):
