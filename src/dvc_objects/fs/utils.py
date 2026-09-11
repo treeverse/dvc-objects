@@ -102,7 +102,7 @@ def remove(path: "AnyFSPath") -> None:
     logger.debug("Removing '%s'", path)
 
     try:
-        if os.path.isdir(path):
+        if not os.path.islink(path) and os.path.isdir(path):
             shutil.rmtree(path, onerror=_chmod)
         else:
             _unlink(path, _chmod)
