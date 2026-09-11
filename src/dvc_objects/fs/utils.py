@@ -158,6 +158,13 @@ def copyfile(
         dest = os.path.join(dest, os.path.basename(src))
 
     try:
+        same_file = os.path.samefile(src, dest)
+    except FileNotFoundError:
+        same_file = False
+    if same_file:
+        raise shutil.SameFileError(f"{src!r} and {dest!r} are the same file")
+
+    try:
         system.reflink(src, dest)
         # NOTE: reflink may or may not clone src permissions
         os.chmod(dest, 0o666 & ~umask)
