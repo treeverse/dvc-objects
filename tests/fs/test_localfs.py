@@ -2,8 +2,67 @@ import os
 from os import fspath
 
 import pytest
+from fsspec.callbacks import Callback
 
+from dvc_objects.fs import utils
 from dvc_objects.fs.local import LocalFileSystem
+
+
+@pytest.mark.parametrize("existing_dest", [False, True])
+def test_put_file_cleans_partial_copy(tmp_path, mocker, existing_dest):
+    source = tmp_path / "source"
+    source.write_bytes(b"checkpoint data")
+    parent = tmp_path / "destination"
+    parent.mkdir()
+    target = parent / "model"
+    if existing_dest:
+        target.write_bytes(b"previous checkpoint")
+
+    class FailingCallback(Callback):
+        def relative_update(self, inc=1):
+            super().relative_update(inc)
+            if self.value > 4:
+                raise OSError("interrupted copy")
+
+    mocker.patch.object(utils.system, "reflink", side_effect=OSError)
+    mocker.patch.object(utils, "COPY_PBAR_MIN_SIZE", 0)
+    mocker.patch.object(utils, "LOCAL_CHUNK_SIZE", 4)
+    with pytest.raises(OSError, match="interrupted copy"):
+        LocalFileSystem().put_file(
+            fspath(source), fspath(target), callback=FailingCallback()
+        )
+
+    assert source.read_bytes() == b"checkpoint data"
+    assert set(parent.iterdir()) == ({target} if existing_dest else set())
+    if existing_dest:
+        assert target.read_bytes() == b"previous checkpoint"
+
+
+def test_put_file_cleans_staging_file_when_replace_fails(tmp_path):
+    source = tmp_path / "source"
+    source.write_bytes(b"checkpoint")
+    target = tmp_path / "directory"
+    target.mkdir()
+    child = target / "keep"
+    child.write_bytes(b"existing data")
+
+    with pytest.raises((IsADirectoryError, PermissionError)):
+        LocalFileSystem().put_file(fspath(source), fspath(target))
+
+    assert set(tmp_path.iterdir()) == {source, target}
+    assert child.read_bytes() == b"existing data"
+
+
+def test_put_file_success_replaces_destination(tmp_path):
+    source = tmp_path / "source"
+    target = tmp_path / "target"
+    source.write_bytes(b"new checkpoint")
+    target.write_bytes(b"old checkpoint")
+
+    LocalFileSystem().put_file(fspath(source), fspath(target))
+
+    assert set(tmp_path.iterdir()) == {source, target}
+    assert source.read_bytes() == target.read_bytes() == b"new checkpoint"
 
 
 @pytest.mark.parametrize("path, contents", [("file", "foo"), ("тест", "проверка")])
