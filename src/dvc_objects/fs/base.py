@@ -5,7 +5,7 @@ import ntpath
 import os
 import posixpath
 import shutil
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator
 from functools import partial
 from multiprocessing import cpu_count
 from typing import (
@@ -132,17 +132,6 @@ class FileSystem:
         if not self.isabs(path):
             path = self.join(self.getcwd(), path)
         return self.normpath(path)
-
-    @classmethod
-    def commonprefix(cls, paths: Sequence[str]) -> str:
-        # os.path.commonprefix() is deprecated since Python 3.15
-        if not paths:
-            return ""
-        s1, s2 = min(paths), max(paths)
-        for i, c in enumerate(s1):
-            if c != s2[i]:
-                return s1[:i]
-        return s1
 
     @classmethod
     def commonpath(cls, paths: Iterable[str]) -> str:
