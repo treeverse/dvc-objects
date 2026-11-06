@@ -19,6 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Development Status :: 4 - Beta",
 ]
 requires-python = ">=3.9"
@@ -39,7 +40,7 @@ tests = [
     "pytest-cov>=4.1.0",
     "pytest-mock",
     "pytest-benchmark",
-    "pytest-asyncio>=0.23.2,<2",
+    "pytest-asyncio>=0.24,<2",
     "reflink",
 ]
 dev = [
@@ -56,6 +57,7 @@ dvc_objects = ["py.typed"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -Werror --benchmark-skip"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
 branch = true
