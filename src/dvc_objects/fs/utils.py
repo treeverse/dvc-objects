@@ -54,7 +54,7 @@ def relpath(path: "AnyFSPath", start: "AnyFSPath" = os.curdir) -> "AnyFSPath":
         path = resolve_network_drive_windows(os.path.abspath(path))
         start = resolve_network_drive_windows(start)
         try:
-            os.path.commonpath([start, path])
+            return os.path.relpath(path, start)
         except ValueError:
             # paths are on different drives
             return path
