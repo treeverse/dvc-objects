@@ -82,6 +82,14 @@ def move(src: "AnyFSPath", dst: "AnyFSPath") -> None:
 
 def _chmod(func, p, excinfo):
     perm = os.lstat(p).st_mode
+    if (
+        os.name == "nt"
+        and func is os.unlink
+        and stat.S_ISREG(perm)
+        and not perm & stat.S_IWRITE
+    ):
+        system.unlink_readonly(p)
+        return
     perm |= stat.S_IWRITE
 
     try:

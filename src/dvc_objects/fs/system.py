@@ -15,6 +15,70 @@ logger = logging.getLogger(__name__)
 has_link = hasattr(os, "link")
 
 
+def unlink_readonly(path: "AnyFSPath") -> None:
+    """Remove a Windows file without changing attributes shared by hardlinks.
+
+    Raise OSError if the OS or filesystem rejects extended file disposition.
+    Clearing the read-only attribute as a fallback would unprotect other links.
+    """
+    if sys.platform == "win32":
+        from ctypes import wintypes
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        create = kernel.CreateFileW
+        create.argtypes = [
+            wintypes.LPCWSTR,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            wintypes.LPVOID,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            wintypes.HANDLE,
+        ]
+        create.restype = wintypes.HANDLE
+        set_info = kernel.SetFileInformationByHandle
+        set_info.argtypes = [
+            wintypes.HANDLE,
+            ctypes.c_int,
+            wintypes.LPVOID,
+            wintypes.DWORD,
+        ]
+        set_info.restype = wintypes.BOOL
+        close = kernel.CloseHandle
+        close.argtypes = [wintypes.HANDLE]
+        close.restype = wintypes.BOOL
+
+        delete_access = 0x00010000
+        share_read_write_delete = 0x7
+        open_existing = 3
+        open_reparse_point = 0x00200000
+        handle = create(
+            os.fsdecode(path),
+            delete_access,
+            share_read_write_delete,
+            None,
+            open_existing,
+            open_reparse_point,
+            None,
+        )
+        if handle == wintypes.HANDLE(-1).value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            # POSIX deletion removes this name; IGNORE_READONLY leaves the shared
+            # attribute intact. Do not fall back to chmod if the OS rejects it.
+            disposition_ex = 21
+            flags = wintypes.DWORD(0x1 | 0x2 | 0x10)
+            if not set_info(
+                handle, disposition_ex, ctypes.byref(flags), ctypes.sizeof(flags)
+            ):
+                raise ctypes.WinError(ctypes.get_last_error())
+        finally:
+            if not close(handle) and sys.exc_info()[0] is None:
+                raise ctypes.WinError(ctypes.get_last_error())
+    else:
+        raise OSError(errno.ENOTSUP, "read-only unlink is only supported on Windows")
+
+
 def hardlink(source: "AnyFSPath", link_name: "AnyFSPath") -> None:
     if not has_link:
         # some Python ports (eg: Termux) don't have os.link()
