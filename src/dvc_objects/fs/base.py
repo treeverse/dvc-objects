@@ -1,5 +1,5 @@
 import asyncio
-import datetime
+import datetime as dt
 import logging
 import ntpath
 import os
@@ -798,10 +798,10 @@ class FileSystem:
     def ukey(self, path: AnyFSPath) -> str:
         return self.fs.ukey(path)
 
-    def created(self, path: AnyFSPath) -> datetime.datetime:
+    def created(self, path: AnyFSPath) -> dt.datetime:
         return self.fs.created(path)
 
-    def modified(self, path: AnyFSPath) -> datetime.datetime:
+    def modified(self, path: AnyFSPath) -> dt.datetime:
         return self.fs.modified(path)
 
     def sign(self, path: AnyFSPath, expiration: int = 100, **kwargs: Any) -> str:
