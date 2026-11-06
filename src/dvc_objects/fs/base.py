@@ -135,7 +135,14 @@ class FileSystem:
 
     @classmethod
     def commonprefix(cls, paths: Sequence[str]) -> str:
-        return cls.flavour.commonprefix(paths)
+        # os.path.commonprefix() is deprecated since Python 3.15
+        if not paths:
+            return ""
+        s1, s2 = min(paths), max(paths)
+        for i, c in enumerate(s1):
+            if c != s2[i]:
+                return s1[:i]
+        return s1
 
     @classmethod
     def commonpath(cls, paths: Iterable[str]) -> str:
