@@ -1,11 +1,11 @@
 import asyncio
-import datetime
+import datetime as dt
 import logging
 import ntpath
 import os
 import posixpath
 import shutil
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator
 from functools import partial
 from multiprocessing import cpu_count
 from typing import (
@@ -132,10 +132,6 @@ class FileSystem:
         if not self.isabs(path):
             path = self.join(self.getcwd(), path)
         return self.normpath(path)
-
-    @classmethod
-    def commonprefix(cls, paths: Sequence[str]) -> str:
-        return cls.flavour.commonprefix(paths)
 
     @classmethod
     def commonpath(cls, paths: Iterable[str]) -> str:
@@ -802,10 +798,10 @@ class FileSystem:
     def ukey(self, path: AnyFSPath) -> str:
         return self.fs.ukey(path)
 
-    def created(self, path: AnyFSPath) -> datetime.datetime:
+    def created(self, path: AnyFSPath) -> dt.datetime:
         return self.fs.created(path)
 
-    def modified(self, path: AnyFSPath) -> datetime.datetime:
+    def modified(self, path: AnyFSPath) -> dt.datetime:
         return self.fs.modified(path)
 
     def sign(self, path: AnyFSPath, expiration: int = 100, **kwargs: Any) -> str:
