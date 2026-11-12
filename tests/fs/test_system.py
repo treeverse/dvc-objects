@@ -1,11 +1,25 @@
 import errno
 import os
 from os import fspath
+from types import SimpleNamespace
 
 import pytest
 
 from dvc_objects.fs import system
 from dvc_objects.fs.system import hardlink, inode, is_hardlink, is_symlink, symlink
+
+
+@pytest.mark.parametrize("platform", ["linux", "darwin"])
+def test_unlink_readonly_unsupported_platform(tmp_path, mocker, platform):
+    path = tmp_path / "file"
+    path.write_bytes(b"keep this file")
+    mocker.patch.object(system, "sys", SimpleNamespace(platform=platform))
+
+    with pytest.raises(OSError, match="only supported on Windows") as error:
+        system.unlink_readonly(path)
+
+    assert error.value.errno == errno.ENOTSUP
+    assert path.read_bytes() == b"keep this file"
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows deletion API")
