@@ -66,6 +66,12 @@ Usage
 
 This is used in `dvc`_ and `dvc-data`_.
 
+On Windows, removing a read-only local file preserves the read-only attribute
+shared by its other hardlinks. This requires the filesystem to support extended
+file disposition with the ignore-read-only flag. If that operation is unsupported
+or denied, removal raises an error instead of clearing the shared attribute.
+This also applies to read-only files encountered during directory removal.
+
 Contributing
 ------------
 
